@@ -1,0 +1,7 @@
+#BSUB -J PIM_test
+#BSUB -n 5
+#BSUB -R span[hosts=1]
+#BSUB -o %J.out
+#BSUB -e %J.err
+#BSUB -q normal
+make
