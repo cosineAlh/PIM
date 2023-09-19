@@ -1,0 +1,350 @@
+** Generated for: hspiceD
+** Design library name: PIM
+** Design cell name: test
+
+.TEMP 25.0
+
+*.INCLUDE "/public/home/anlh/PDKs/FreePDK45/ncsu_basekit/models/hspice/tran_models/models_nom/PMOS_VTL.inc"
+*.INCLUDE "/public/home/anlh/PDKs/FreePDK45/ncsu_basekit/models/hspice/tran_models/models_nom/NMOS_VTL.inc"
+.INCLUDE "../model/PMOS_VTL.inc"
+.INCLUDE "../model/NMOS_VTL.inc"
+
+.global vdd gnd
+
+** Library name: PIM
+** Cell name: MRAM_cell
+.subckt MRAM_cell bl gnd sl wl
+xi0 net7 bl MTJ 
+m0 net7 wl sl gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+.ends MRAM_cell
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: MRAM_cell_P
+.subckt MRAM_cell_P bl gnd sl wl
+xi3 net7 bl MTJ_P
+**m0 net7 wl sl gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+.ends MRAM_cell_P
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: 2_1MUX
+.subckt PIM_2_1MUX gnd i0 i1 out s vdd
+m13 sn s vdd vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m17 net017 sn net025 vdd PMOS_VTL L=50e-9 W=360e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m18 out net017 vdd vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m15 net024 i0 vdd vdd PMOS_VTL L=50e-9 W=360e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m14 net025 i1 vdd vdd PMOS_VTL L=50e-9 W=360e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m16 net017 s net024 vdd PMOS_VTL L=50e-9 W=360e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m6 out net017 gnd gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m4 net017 i0 net014 gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m1 net014 sn gnd gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m5 net017 s net014 gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m2 sn s gnd gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m0 net014 i1 gnd gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+.ends PIM_2_1MUX
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: NAND
+.subckt NAND a b gnd out vdd
+m4 net17 b gnd gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m2 out a net17 gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m3 out b vdd vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m0 out a vdd vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+.ends NAND
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: inverter
+.subckt inverter gnd in out vdd
+m0 out in gnd gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m1 out in vdd vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+.ends inverter
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: buffer
+.subckt buffer gnd in out vdd
+xi1 gnd net11 out vdd inverter
+xi0 gnd in net11 vdd inverter
+.ends buffer
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: TG
+.subckt TG en gnd in out vdd
+m0 in en out gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m1 in net15 out vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+xi0 gnd en net15 vdd inverter
+.ends TG
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: SenseAp
+.subckt SenseAp en gnd pec vdata vdd vo1 vo2 vref
+m1 vo2 vo1 vdd vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m0 vo1 vo2 vdd vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m7 vo2 pec vo1 vdd PMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m2 vo1 vdata net10 gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m5 net013 vo2 net10 gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m6 net018 vo1 net013 gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m4 net018 vref vo2 gnd NMOS_VTL L=50e-9 W=180e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+m3 net013 en gnd gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+.ends SenseAp
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: Reference_Gen
+.subckt Reference_Gen gnd rw0 vdd vref
+r4 vref vdd 20e3
+r2 net17 vref 2.2e3
+m2 net17 rw0 gnd gnd NMOS_VTL L=50e-9 W=90e-9 AD=9.45e-15 AS=9.45e-15 PD=300e-9 PS=300e-9 M=1
+.ends Reference_Gen
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: Col_control
+.subckt Col_control bl bl_in en gnd out out_b pec rw sl_in vdd
+xi0 gnd gnd net031 out_b and_out vdd PIM_2_1MUX
+xi153 gnd gnd net29 out and_out vdd PIM_2_1MUX
+xi152 bl_in pec gnd and_out vdd NAND
+xi16 gnd net25 net29 vdd buffer
+xi1 gnd net30 net031 vdd buffer
+xi142 bl gnd bl bl_in vdd TG
+xi137 sl_in gnd gnd bl_in vdd TG
+xi2 en gnd pec bl_in vdd net30 net25 net017 SenseAp
+xi121 gnd rw vdd net017 Reference_Gen
+.ends Col_control
+** End of subcircuit definition.
+
+** Library name: PIM
+** Cell name: array
+.subckt array bl_0 bl_0b bl_1 bl_1b bl_2 bl_2b bl_3 bl_3b bl_4 bl_4b bl_5 bl_5b bl_6 bl_6b bl_7 bl_7b bl_8 bl_8b bl_9 bl_9b en gnd out0 out0b out1 out1b out2 out2b out3 out3b out4 out4b out5 out5b out6 out6b out7 out7b out8 out8b out9 out9b pec rw sl0 sl0b sl1 sl1b sl2 sl2b sl3 sl3b sl4 sl4b sl5 sl5b sl6 sl6b sl7 sl7b sl8 sl8b sl9 sl9b vdd wl0 wl1 wl2 wl3 wl4 wl5 wl6 wl7 wl8
+xi411 bl8b gnd sl8b wl7 $bs8b_wl7
+xi410 bl8b gnd sl8b wl0 $bs8b_wl0
+xi409 bl8b gnd sl8b wl1 $bs8b_wl1
+xi408 bl8b gnd sl8b wl3 $bs8b_wl3
+xi407 bl8b gnd sl8b wl8 $bs8b_wl8
+xi406 bl8b gnd sl8b wl5 $bs8b_wl5
+xi405 bl8b gnd sl8b wl6 $bs8b_wl6
+xi404 bl8b gnd sl8b wl4 $bs8b_wl4
+xi403 bl8b gnd sl8b wl2 $bs8b_wl2
+xi402 bl9 gnd sl9 wl2 $bs9_wl2
+xi401 bl9 gnd sl9 wl4 $bs9_wl4
+xi400 bl9 gnd sl9 wl6 $bs9_wl6
+xi399 bl9 gnd sl9 wl5 $bs9_wl5
+xi398 bl9 gnd sl9 wl8 $bs9_wl8
+xi397 bl9 gnd sl9 wl3 $bs9_wl3
+xi396 bl9 gnd sl9 wl1 $bs9_wl1
+xi395 bl9 gnd sl9 wl0 $bs9_wl0
+xi394 bl9 gnd sl9 wl7 $bs9_wl7
+xi393 bl9b gnd sl9b wl7 $bs9b_wl7
+xi392 bl9b gnd sl9b wl0 $bs9b_wl0
+xi391 bl9b gnd sl9b wl1 $bs9b_wl1
+xi390 bl9b gnd sl9b wl3 $bs9b_wl3
+xi389 bl9b gnd sl9b wl8 $bs9b_wl8
+xi388 bl9b gnd sl9b wl5 $bs9b_wl5
+xi387 bl9b gnd sl9b wl6 $bs9b_wl6
+xi386 bl9b gnd sl9b wl4 $bs9b_wl4
+xi385 bl9b gnd sl9b wl2 $bs9b_wl2
+xi384 bl8 gnd sl8 wl2 $bs8_wl2
+xi383 bl8 gnd sl8 wl4 $bs8_wl4
+xi382 bl8 gnd sl8 wl6 $bs8_wl6
+xi381 bl8 gnd sl8 wl5 $bs8_wl5
+xi380 bl8 gnd sl8 wl8 $bs8_wl8
+xi379 bl8 gnd sl8 wl3 $bs8_wl3
+xi378 bl8 gnd sl8 wl1 $bs8_wl1
+xi377 bl8 gnd sl8 wl0 $bs8_wl0
+xi376 bl8 gnd sl8 wl7 $bs8_wl7
+xi375 bl7b gnd sl7b wl7 $bs7b_wl7
+xi374 bl7b gnd sl7b wl0 $bs7b_wl0
+xi373 bl7b gnd sl7b wl1 $bs7b_wl1
+xi372 bl7b gnd sl7b wl3 $bs7b_wl3
+xi371 bl7b gnd sl7b wl8 $bs7b_wl8
+xi370 bl7b gnd sl7b wl5 $bs7b_wl5
+xi369 bl7b gnd sl7b wl6 $bs7b_wl6
+xi368 bl7b gnd sl7b wl4 $bs7b_wl4
+xi367 bl7b gnd sl7b wl2 $bs7b_wl2
+xi366 bl7 gnd sl7 wl2 $bs7_wl2
+xi365 bl7 gnd sl7 wl4 $bs7_wl4
+xi364 bl7 gnd sl7 wl6 $bs7_wl6
+xi363 bl7 gnd sl7 wl5 $bs7_wl5
+xi362 bl7 gnd sl7 wl8 $bs7_wl8
+xi361 bl7 gnd sl7 wl3 $bs7_wl3
+xi360 bl7 gnd sl7 wl1 $bs7_wl1
+xi359 bl7 gnd sl7 wl0 $bs7_wl0
+xi358 bl7 gnd sl7 wl7 $bs7_wl7
+xi357 bl5b gnd sl5b wl7 $bs5b_wl7
+xi356 bl5b gnd sl5b wl0 $bs5b_wl0
+xi355 bl5b gnd sl5b wl1 $bs5b_wl1
+xi354 bl5b gnd sl5b wl3 $bs5b_wl3
+xi353 bl5b gnd sl5b wl8 $bs5b_wl8
+xi352 bl5b gnd sl5b wl5 $bs5b_wl5
+xi351 bl5b gnd sl5b wl6 $bs5b_wl6
+xi350 bl5b gnd sl5b wl4 $bs5b_wl4
+xi349 bl5b gnd sl5b wl2 $bs5b_wl2
+xi348 bl6 gnd sl6 wl2 $bs6_wl2
+xi347 bl6 gnd sl6 wl4 $bs6_wl4
+xi346 bl6 gnd sl6 wl6 $bs6_wl6
+xi345 bl6 gnd sl6 wl5 $bs6_wl5
+xi344 bl6 gnd sl6 wl8 $bs6_wl8
+xi343 bl6 gnd sl6 wl3 $bs6_wl3
+xi342 bl6 gnd sl6 wl1 $bs6_wl1
+xi341 bl6 gnd sl6 wl0 $bs6_wl0
+xi340 bl6 gnd sl6 wl7 $bs6_wl7
+xi339 bl6b gnd sl6b wl7 $bs6b_wl7
+xi338 bl6b gnd sl6b wl0 $bs6b_wl0
+xi337 bl6b gnd sl6b wl1 $bs6b_wl1
+xi336 bl6b gnd sl6b wl3 $bs6b_wl3
+xi335 bl6b gnd sl6b wl8 $bs6b_wl8
+xi334 bl6b gnd sl6b wl5 $bs6b_wl5
+xi333 bl6b gnd sl6b wl6 $bs6b_wl6
+xi332 bl6b gnd sl6b wl4 $bs6b_wl4
+xi331 bl6b gnd sl6b wl2 $bs6b_wl2
+xi330 bl5 gnd sl5 wl2 $bs5_wl2
+xi329 bl5 gnd sl5 wl4 $bs5_wl4
+xi328 bl5 gnd sl5 wl6 $bs5_wl6
+xi327 bl5 gnd sl5 wl5 $bs5_wl5
+xi326 bl5 gnd sl5 wl8 $bs5_wl8
+xi325 bl5 gnd sl5 wl3 $bs5_wl3
+xi324 bl5 gnd sl5 wl1 $bs5_wl1
+xi323 bl5 gnd sl5 wl0 $bs5_wl0
+xi322 bl5 gnd sl5 wl7 $bs5_wl7
+xi321 bl4b gnd sl4b wl7 $bs4b_wl7
+xi320 bl4b gnd sl4b wl0 $bs4b_wl0
+xi319 bl4b gnd sl4b wl1 $bs4b_wl1
+xi318 bl4b gnd sl4b wl3 $bs4b_wl3
+xi317 bl4b gnd sl4b wl8 $bs4b_wl8
+xi316 bl4b gnd sl4b wl5 $bs4b_wl5
+xi315 bl4b gnd sl4b wl6 $bs4b_wl6
+xi314 bl4b gnd sl4b wl4 $bs4b_wl4
+xi313 bl4b gnd sl4b wl2 $bs4b_wl2
+xi312 bl4 gnd sl4 wl2 $bs4_wl2
+xi311 bl4 gnd sl4 wl4 $bs4_wl4
+xi310 bl4 gnd sl4 wl6 $bs4_wl6
+xi309 bl4 gnd sl4 wl5 $bs4_wl5
+xi308 bl4 gnd sl4 wl8 $bs4_wl8
+xi307 bl4 gnd sl4 wl3 $bs4_wl3
+xi306 bl4 gnd sl4 wl1 $bs4_wl1
+xi305 bl4 gnd sl4 wl0 $bs4_wl0
+xi304 bl4 gnd sl4 wl7 $bs4_wl7
+xi303 bl3b gnd sl3b wl7 $bs3b_wl7
+xi301 bl3b gnd sl3b wl0 $bs3b_wl0
+xi300 bl3b gnd sl3b wl1 $bs3b_wl1
+xi297 bl3b gnd sl3b wl3 $bs3b_wl3
+xi296 bl3b gnd sl3b wl8 $bs3b_wl8
+xi294 bl3b gnd sl3b wl5 $bs3b_wl5
+xi61  bl3b gnd sl3b wl6 $bs3b_wl6
+xi26  bl3b gnd sl3b wl2 $bs3b_wl4
+xi40  bl3b gnd sl3b wl4 $bs3b_wl2
+xi25  bl3 gnd sl3 wl2 $bs3_wl2
+xi292 bl3 gnd sl3 wl4 $bs3_wl4
+xi55  bl3 gnd sl3 wl6 $bs3_wl6
+xi293 bl3 gnd sl3 wl5 $bs3_wl5
+xi75  bl3 gnd sl3 wl8 $bs3_wl8
+xi33  bl3 gnd sl3 wl3 $bs3_wl3
+xi19  bl3 gnd sl3 wl1 $bs3_wl1
+xi49  bl3 gnd sl3 wl0 $bs3_wl0
+xi69  bl3 gnd sl3 wl7 $bs3_wl7
+xi72  bl2b gnd sl2b wl7 $bs2b_wl7
+xi50  bl2b gnd sl2b wl0 $bs2b_wl0
+xi22  bl2b gnd sl2b wl1 $bs2b_wl1
+xi298 bl2b gnd sl2b wl3 $bs2b_wl3
+xi78  bl2b gnd sl2b wl8 $bs2b_wl8
+xi290 bl2b gnd sl2b wl5 $bs2b_wl5
+xi62  bl2b gnd sl2b wl6 $bs2b_wl6
+xi291 bl2b gnd sl2b wl4 $bs2b_wl4
+xi299 bl2b gnd sl2b wl2 $bs2b_wl2
+xi280 bl2 gnd sl2 wl2 $bs2_wl2
+xi273 bl2 gnd sl2 wl4 $bs2_wl4
+xi63  bl2 gnd sl2 wl6 $bs2_wl6
+xi272 bl2 gnd sl2 wl5 $bs2_wl5
+xi266 bl2 gnd sl2 wl8 $bs2_wl8
+xi279 bl2 gnd sl2 wl3 $bs2_wl3
+xi21  bl2 gnd sl2 wl1 $bs2_wl1
+xi289 bl2 gnd sl2 wl0 $bs2_wl0
+xi71  bl2 gnd sl2 wl7 $bs2_wl7
+xi261 bl0b gnd sl0b wl7 $bs0b_wl7
+xi285 bl0b gnd sl0b wl0 $bs0b_wl0
+xi287 bl0b gnd sl0b wl1 $bs0b_wl1
+xi277 bl0b gnd sl0b wl3 $bs0b_wl3
+xi262 bl0b gnd sl0b wl8 $bs0b_wl8
+xi269 bl0b gnd sl0b wl5 $bs0b_wl5
+xi260 bl0b gnd sl0b wl6 $bs0b_wl6
+xi275 bl0b gnd sl0b wl4 $bs0b_wl4
+xi283 bl0b gnd sl0b wl2 $bs0b_wl2
+xi282 bl1 gnd sl1 wl2 $bs1_wl2
+xi37  bl1 gnd sl1 wl4 $bs1_wl4
+xi268 bl1 gnd sl1 wl6 $bs1_wl6
+xi270 bl1 gnd sl1 wl5 $bs1_wl5
+xi73  bl1 gnd sl1 wl8 $bs1_wl8
+xi278 bl1 gnd sl1 wl3 $bs1_wl3
+xi288 bl1 gnd sl1 wl1 $bs1_wl1
+xi47  bl1 gnd sl1 wl0 $bs1_wl0
+xi263 bl1 gnd sl1 wl7 $bs1_wl7
+xi264 bl1b gnd sl1b wl7 $bs1b_wl7
+xi48  bl1b gnd sl1b wl0 $bs1b_wl0
+xi18  bl1b gnd sl1b wl1 $bs1b_wl1
+xi32  bl1b gnd sl1b wl3 $bs1b_wl3
+xi265 bl1b gnd sl1b wl8 $bs1b_wl8
+xi271 bl1b gnd sl1b wl5 $bs1b_wl5
+xi267 bl1b gnd sl1b wl6 $bs1b_wl6
+xi274 bl1b gnd sl1b wl4 $bs1b_wl4
+xi281 bl1b gnd sl1b wl2 $bs1b_wl2
+xi29  bl0 gnd sl0 wl2 $bs0_wl2
+xi276 bl0 gnd sl0 wl4 $bs0_wl4
+xi259 bl0 gnd sl0 wl6 $bs0_wl6
+xi85  bl0 gnd sl0 wl5 $bs0_wl5
+xi134 bl0 gnd sl0 wl8 $bs0_wl8
+xi45  bl0 gnd sl0 wl3 $bs0_wl3
+xi286 bl0 gnd sl0 wl1 $bs0_wl1
+xi284 bl0 gnd sl0 wl0 $bs0_wl0
+xi81  bl0 gnd sl0 wl7 $bs0_wl7
+r19 bl8b vdd 20e3
+r18 bl9 vdd 20e3
+r17 bl9b vdd 20e3
+r16 bl8 vdd 20e3
+r15 bl7b vdd 20e3
+r14 bl7 vdd 20e3
+r13 bl5b vdd 20e3
+r12 bl6 vdd 20e3
+r11 bl6b vdd 20e3
+r10 bl5 vdd 20e3
+r9 bl4b vdd 20e3
+r8 bl4 vdd 20e3
+r7 bl2 vdd 20e3
+r6 bl2b vdd 20e3
+r5 bl3b vdd 20e3
+r4 bl3 vdd 20e3
+r2 bl1 vdd 20e3
+r1 bl1b vdd 20e3
+r0 bl0b vdd 20e3
+r3 bl0 vdd 20e3
+xi423 bl_8b bl8b en gnd out8b net0238 pec rw sl8b vdd Col_control
+xi422 bl_5b bl5b en gnd out5b net0239 pec rw sl5b vdd Col_control
+xi421 bl_7b bl7b en gnd out7b net0240 pec rw sl7b vdd Col_control
+xi420 bl_6b bl6b en gnd out6b net0241 pec rw sl6b vdd Col_control
+xi419 bl_9b bl9b en gnd out9b net0242 pec rw sl9b vdd Col_control
+xi418 bl_4b bl4b en gnd out4b net0243 pec rw sl4b vdd Col_control
+xi417 bl_1b bl1b en gnd out1b net0244 pec rw sl1b vdd Col_control
+xi416 bl_2b bl2b en gnd out2b net0245 pec rw sl2b vdd Col_control
+xi415 bl_0b bl0b en gnd out0b net0246 pec rw sl0b vdd Col_control
+xi414 bl_3b bl3b en gnd out3b net0247 pec rw sl3b vdd Col_control
+xi413 bl_9 bl9 en gnd out9 net0248 pec rw sl9 vdd Col_control
+xi412 bl_8 bl8 en gnd out8 net0249 pec rw sl8 vdd Col_control
+xi206 bl_4 bl4 en gnd out4 net0250 pec rw sl4 vdd Col_control
+xi199 bl_5 bl5 en gnd out5 net0251 pec rw sl5 vdd Col_control
+xi198 bl_6 bl6 en gnd out6 net0252 pec rw sl6 vdd Col_control
+xi154 bl_0 bl0 en gnd out0 net0253 pec rw sl0 vdd Col_control
+xi182 bl_3 bl3 en gnd out3 net0254 pec rw sl3 vdd Col_control
+xi187 bl_7 bl7 en gnd out7 net0255 pec rw sl7 vdd Col_control
+xi173 bl_2 bl2 en gnd out2 net0256 pec rw sl2 vdd Col_control
+xi170 bl_1 bl1 en gnd out1 net0257 pec rw sl1 vdd Col_control
+.ends array
+** End of subcircuit definition.
+
+*.hdl "/public/home/anlh/PIM/MTJ/veriloga/veriloga.va"
+*.hdl "/public/home/anlh/PIM/MTJ_P/veriloga/veriloga.va"
+.hdl "../model/MTJ/veriloga/veriloga.va"
+.hdl "../model/MTJ_P/veriloga/veriloga.va"

@@ -1,0 +1,178 @@
+** Testbench
+** 
+**-----------------------------------------------------------------------------------
+** This file is the testbench of array.sp and translate the output into digital form.
+**
+** # Instruction
+** Do not change if not necessary.
+**-----------------------------------------------------------------------------------
+
+** Options **
+** win
+.option post ingold=1 symb=1 ACCT NOMOD
+** linux
+**.option
+**+    ARTIST=2
+**+    INGOLD=2
+**+    PARHIER=LOCAL
+**+    PSF=2
+
+** Includes **
+.include "../src/sp/array.sp"
+
+** Sub-circuits **
+X1 bl_0 bl_0b bl_1 bl_1b bl_2 bl_2b bl_3 bl_3b bl_4 bl_4b bl_5 bl_5b bl_6 bl_6b bl_7 bl_7b bl_8 bl_8b bl_9 bl_9b en gnd out0 out0b out1 out1b out2 out2b out3 out3b out4 out4b out5 out5b out6 out6b out7 out7b out8 out8b out9 out9b pec rw sl0 sl0b sl1 sl1b sl2 sl2b sl3 sl3b sl4 sl4b sl5 sl5b sl6 sl6b sl7 sl7b sl8 sl8b sl9 sl9b vdd wl0 wl1 wl2 wl3 wl4 wl5 wl6 wl7 wl8 array
+
+** Signals **
+v0 vdd 0 DC=1.2V
+**v1 clk 0 pulse 0 1.2 2.4e-9 0.1e-9 0.1e-9 2.4e-9 5e-9
+
+.pat en = $en
+.pat pec = $pec
+.pat rw = $rw
+v2 en 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 en
+v3 pec 0 pat 1.2 0 0 0.1e-9 0.1e-9 2.5e-9 pec
+v4 rw 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 rw
+
+.pat pbl_0 = $bl0
+.pat pbl_1 = $bl1
+.pat pbl_2 = $bl2
+.pat pbl_3 = $bl3
+.pat pbl_4 = $bl4
+.pat pbl_5 = $bl5
+.pat pbl_6 = $bl6
+.pat pbl_7 = $bl7
+.pat pbl_8 = $bl8
+.pat pbl_9 = $bl9
+v5 bl_0 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_0
+v6 bl_1 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_1
+v7 bl_2 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_2
+v8 bl_3 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_3
+v9 bl_4 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_4
+v10 bl_5 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_5
+v11 bl_6 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_6
+v12 bl_7 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_7
+v13 bl_8 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_8
+v14 bl_9 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_9
+
+.pat pbl_0b = $bl0b
+.pat pbl_1b = $bl1b
+.pat pbl_2b = $bl2b
+.pat pbl_3b = $bl3b
+.pat pbl_4b = $bl4b
+.pat pbl_5b = $bl5b
+.pat pbl_6b = $bl6b
+.pat pbl_7b = $bl7b
+.pat pbl_8b = $bl8b
+.pat pbl_9b = $bl9b
+v15 bl_0b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_0b
+v16 bl_1b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_1b
+v17 bl_2b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_2b
+v18 bl_3b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_3b
+v19 bl_4b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_4b
+v20 bl_5b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_5b
+v21 bl_6b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_6b
+v22 bl_7b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_7b
+v23 bl_8b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_8b
+v24 bl_9b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 pbl_9b
+
+.pat sl0 = $sl0
+.pat sl1 = $sl1
+.pat sl2 = $sl2
+.pat sl3 = $sl3
+.pat sl4 = $sl4
+.pat sl5 = $sl5
+.pat sl6 = $sl6
+.pat sl7 = $sl7
+.pat sl8 = $sl8
+.pat sl9 = $sl9
+v25 sl0 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl0
+v26 sl1 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl1
+v27 sl2 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl2
+v28 sl3 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl3
+v29 sl4 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl4
+v30 sl5 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl5
+v31 sl6 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl6
+v32 sl7 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl7
+v33 sl8 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl8
+v34 sl9 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl9
+
+.pat sl0b = $sl0b
+.pat sl1b = $sl1b
+.pat sl2b = $sl2b
+.pat sl3b = $sl3b
+.pat sl4b = $sl4b
+.pat sl5b = $sl5b
+.pat sl6b = $sl6b
+.pat sl7b = $sl7b
+.pat sl8b = $sl8b
+.pat sl9b = $sl9b
+v35 sl0b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl0b
+v36 sl1b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl1b
+v37 sl2b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl2b
+v38 sl3b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl3b
+v39 sl4b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl4b
+v40 sl5b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl5b
+v41 sl6b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl6b
+v42 sl7b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl7b
+v43 sl8b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl8b
+v44 sl9b 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 sl9b
+
+.pat wl0 = $wl0
+.pat wl1 = $wl1
+.pat wl2 = $wl2
+.pat wl3 = $wl3
+.pat wl4 = $wl4
+.pat wl5 = $wl5
+.pat wl6 = $wl6
+.pat wl7 = $wl7
+.pat wl8 = $wl8
+v45 wl0 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl0
+v46 wl1 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl1
+v47 wl2 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl2
+v48 wl3 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl3
+v49 wl4 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl4
+v50 wl5 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl5
+v51 wl6 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl6
+v52 wl7 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl7
+v53 wl8 0 pat 1.2 0 0 0.1e-9 0.1e-9 5e-9 wl8
+
+** Models **
+.model A2D U LEVEL=4 TIMESCALE=1 TIMESTEP=$timestep
++S0NAME=0 S0VLO=-0.3 S0VHI=0.6
++S1NAME=1 S1VLO=0.6 S1VHI=1.5
++CLOAD=0.1e-15
+
+uc0 out0 0 A2D signame=out0
+uc1 out1 0 A2D signame=out1
+uc2 out2 0 A2D signame=out2
+uc3 out3 0 A2D signame=out3
+uc4 out4 0 A2D signame=out4
+uc5 out5 0 A2D signame=out5
+uc6 out6 0 A2D signame=out6
+uc7 out7 0 A2D signame=out7
+uc8 out8 0 A2D signame=out8
+uc9 out9 0 A2D signame=out9
+uc10 out0b 0 A2D signame=out0b
+uc11 out1b 0 A2D signame=out1b
+uc12 out2b 0 A2D signame=out2b
+uc13 out3b 0 A2D signame=out3b
+uc14 out4b 0 A2D signame=out4b
+uc15 out5b 0 A2D signame=out5b
+uc16 out6b 0 A2D signame=out6b
+uc17 out7b 0 A2D signame=out7b
+uc18 out8b 0 A2D signame=out8b
+uc19 out9b 0 A2D signame=out9b
+
+** Parameters **
+.param period = $period
+.param t0= 0.1ns
+.param t1= t0+period
+.param t2= t1+t0
+.param step= 1ps
+
+**.measure tot_power avg power from 100ns t0 t1
+
+.tran step t2
+**.print V(out0) V(out1) V(out2) V(out3) V(out4) V(out5) V(out6) V(out7)
+.end
