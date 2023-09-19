@@ -1,0 +1,183 @@
+// STT MTJ model by Verilog-A
+// Author: ALH
+// Email:  anlh@shanghaitech.edu.cn
+//-----------------------------------------------------------------------------------
+// This file simulates the dynamic motion of MTJ, LLG equation is solving by spherical angles.
+// This model includes thermal fluctuations and resistances.
+// # Instruction
+// Do not change if not necessary.
+//-----------------------------------------------------------------------------------
+
+`include "disciplines.vams"
+`include "constants.vams"
+
+module MTJmodel(pl, fl);
+
+`include "constantsfile.va"
+`include "parameters.va"
+
+// ports
+inout fl, pl;
+
+electrical fl, pl;
+electrical I_MTJ, V_MTJ, R_out;
+electrical mz;
+
+real R_mtj;
+real I;
+
+// time
+real c_time;	// Current timestep
+real p_time;	// Previous timestep
+real dt;		// Difference between current and previous timestep
+
+// basic parameters
+real r_gamma;       // reduced gamma
+real Ms2;
+real Hk2;
+
+// seed
+integer seed;
+
+// thermal
+real delta;         // thermal stability
+real thermal_noise;
+
+// angles
+real theta_init2, phi_init2;
+real theta0;
+real m_theta, m_phi;
+real d_theta, d_phi;
+
+// vectors
+real m_x, m_y, m_z;
+// h vectors
+real heff_x, heff_y, heff_z;
+real hd_x, hd_y, hd_z;
+real hth_x, hth_y, hth_z;
+real huni_z;
+
+// STT
+real Ip;
+
+
+// ------------------------------------------------------------------------------
+// LLG behavior
+analog begin
+    // initialization -----------------------------------------------------------
+    @(initial_step) begin
+
+        // inits basic parameters
+        seed = 0;
+        Hk2 = Hk;
+        Ms2 = Ms;
+        r_gamma = mu_0*gamma / (1+alpha*alpha);
+        phi_init2 = phi_init;
+
+		if (init_state == 2) begin
+			theta_init2 = theta_init;
+		end
+		else begin
+			if (init_state == 0) begin
+				theta_init2 = 0;
+			end
+			else if (init_state == 1) begin
+				theta_init2 = `M_PI;
+			end
+		end
+
+        // thermal stability
+        delta = ((Hk2*Ms2-mu_0*Ms2*Ms2/2)*volume) / (kb*T);
+        theta0 = sqrt(1/(2*delta));
+
+        // inits thermal
+        if (thermal_enable) begin
+            thermal_noise = sqrt(2*alpha*T*kb*alpha / (gamma*Ms2*volume / (1+alpha*alpha)));
+        end
+        else begin
+            thermal_noise = 0;
+        end
+        
+        // inits magnetic angle
+        m_phi = phi_init2;
+
+        if (init_state != 2) begin
+            if (theta_init2 < `M_PI/2) begin
+                m_theta = 2*theta0*sqrt(2/(`M_PI));
+            end
+            else begin
+                m_theta = `M_PI - 2*theta0*sqrt(2/(`M_PI));
+            end
+        end
+        else begin
+            m_theta = theta_init2;
+        end
+        
+        // transform to cart
+        m_x = sin(m_theta)*cos(m_phi);
+		m_y = sin(m_theta)*sin(m_phi);
+		m_z = cos(m_theta);
+
+        // inits STT
+        Ip = gamma*hbar*PolFL / (2*Ms2*volume);
+
+        // time
+        p_time = -tstep;
+
+    end
+    
+    // Resistance 
+    //R_mtj = RP+(RAP-RP)*((1-m_z)/2);
+    R_mtj = RP+(RAP-RP)*((1-m_z)/2)/(1+V(fl, pl)*V(fl, pl)/Vhalf*Vhalf);
+    I = V(fl, pl)/R_mtj;
+    I(fl, pl) <+ V(fl, pl)/R_mtj;
+    // outputs
+    V(V_MTJ) <+ V(fl, pl);
+    V(I_MTJ) <+ I(fl, pl);
+	V(R_out) <+ R_mtj;
+
+    // time
+    $bound_step(tstep);
+    c_time = $abstime;	// Get current timestep
+    dt = c_time-p_time;
+
+    // Fields --------------------------------------------------------------
+    // demagnetization
+    hd_x = -Ms2*demag_nx*m_x;        // [T]
+    hd_y = -Ms2*demag_ny*m_y;
+    hd_z = -Ms2*demag_nz*m_z;
+
+    // uniaxial anisotropy
+    huni_z = Hk*m_z/4/1e-7/(`M_PI);
+
+    // thermal
+    if (thermal_enable) begin
+        hth_x = $rdist_normal(seed, 0, thermal_noise) / sqrt(dt)/4/1e-7/(`M_PI);
+        hth_y = $rdist_normal(seed, 0, thermal_noise) / sqrt(dt)/4/1e-7/(`M_PI);
+        hth_z = $rdist_normal(seed, 0, thermal_noise) / sqrt(dt)/4/1e-7/(`M_PI);
+    end
+    else begin
+        hth_x = 0.0;
+        hth_y = 0.0;
+        hth_z = 0.0;
+    end
+
+    heff_x = hext_x + hd_x + hth_x;
+    heff_y = hext_y + hd_y + hth_y;
+    heff_z = hext_z + hd_z + hth_z + huni_z;
+
+    // solving LLG equation -------------------------------------------		
+    d_phi = dt*(r_gamma*(heff_x*(-cos(m_theta)*cos(m_phi)-alpha*sin(m_phi)) + heff_y*(-cos(m_theta)*sin(m_phi)+alpha*cos(m_phi)) + heff_z*sin(m_theta))/sin(m_theta) - alpha*Ip*I/(1+alpha*alpha));
+	d_theta = dt*(r_gamma*(heff_x*(alpha*cos(m_theta)*cos(m_phi)-sin(m_phi)) + heff_y*(alpha*cos(m_theta)*sin(m_phi)+cos(m_phi)) - heff_z*alpha*sin(m_theta)) - Ip*I*sin(m_theta)/(1+alpha*alpha));
+	m_phi = m_phi + d_phi;
+	m_theta = m_theta + d_theta;
+
+    m_x = sin(m_theta)*cos(m_phi);
+	m_y = sin(m_theta)*sin(m_phi);
+    m_z = cos(m_theta);
+    V(mz) <+ m_z;                              // output m_z
+    
+    p_time = $abstime;
+end
+
+endmodule

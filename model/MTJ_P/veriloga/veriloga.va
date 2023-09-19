@@ -1,0 +1,344 @@
+// STT MTJ model by Verilog-A
+// 
+//-----------------------------------------------------------------------------------
+// This file simulates the dynamic motion of MTJ by solving the LLG using RK4.
+// This model includes thermal fluctuations and resistances.
+// # Instruction
+// Do not change if not necessary.
+//-----------------------------------------------------------------------------------
+
+`include "disciplines.vams"
+`include "constants.vams"
+
+module MTJ_P(pl, fl);
+
+// Constants
+parameter real gamma = 1.760859644e11;        // [rad/s/T]
+// elementary charge, [C]
+parameter real ele = `P_Q;	                // 1.602176462e-19 [C]
+// reduced plank's constant [J s]
+parameter real hbar = 6.58211951440e-16;      // [eV.s]
+// vacuum permeability, 4pi/1e7 [H/m]
+parameter real mu_0 = 4*`M_PI/1e7;           // 1.25663706212e-6 [T.m/A]
+// Boltzman constant [J/K]
+parameter real kb = 1.38064852e-23;
+// Borh magneton [J/T]
+parameter real mub = gamma * hbar / 2;
+
+// -----------------------------------------------------
+// Parameters
+parameter real tstep=1e-12;                 // [s] max time step
+
+// dimmensions
+parameter real tFL=1e-9;                   // [m] thickness of free layer
+parameter real tox=1.2e-9;                   // [m] thickness of oxide
+parameter real WFL=50e-9;                    // [m] mtj width
+parameter real LFL=50e-9;                    // [m] mtj length
+
+parameter real area = WFL*LFL;       // [m^2}
+parameter real volume = area*tFL;            // [m^3]
+
+// thermal
+parameter real T = 300;                         // temperature [K]
+
+// PL angle
+parameter real theta_PL=0.0;                   // [rad] pinned layer theta
+parameter real phi_PL=0.0;                     // [rad] pinned layer phi
+
+// initial angle
+parameter integer init_state = 2;               // 0: P, 1: AP, 2: theta_init
+parameter real theta_init=`M_PI*5/180;        // [rad] 
+parameter real phi_init=0.0;                    // [rad]
+
+// magnetic parameters
+parameter real Hk=0.45;                          // uniaxial anisotropy [T]
+parameter real alpha=0.01;                      // alpha damping factor
+parameter real Ms=0.8e6;                        // magnetization sat. [A/m]
+
+// Hext (external field)
+parameter real hext_x=0;
+parameter real hext_y=0;
+parameter real hext_z=0;
+
+// demagnization
+parameter real demag_nx=0.029568912401017035;
+parameter real demag_ny=0.029568912401017035;
+parameter real demag_nz=0.9408621604251352;      // online calculator
+
+// STT
+parameter real facFLT_STT=0;                  // ratio of FLT over DLT
+parameter real PolFL=0.4;                       // polarization factor of FL layer
+parameter real P_x=0;
+parameter real P_y=0;
+parameter real P_z=1;
+
+// TMR and Resistance
+parameter real RP=2.0e3;                        // RP resistance, [ohm]
+parameter real TMR = 1.5;                       // 2*Pol*Pol/(1-Pol*Pol);
+parameter real RAP = RP*(1+TMR);
+parameter real Vhalf = 0.5;
+
+// -------------------------------------------------------------
+// ports
+inout fl, pl;
+
+electrical fl, pl;
+electrical I_MTJ, V_MTJ, R_out;
+electrical mz;
+
+real R_mtj;
+real Iin;
+real LLG_flag;
+
+// time
+real c_time;	// Current timestep
+real p_time;	// Previous timestep
+real dt;		// Difference between current and previous timestep
+
+// basic parameters
+real r_gamma;       // reduced gamma
+real Ms2;
+real Hk2;
+
+// thermal
+real delta;         // thermal stability
+
+// angles
+real theta_init2, phi_init2;
+real theta0;
+real m_theta, m_phi;
+
+// vectors
+real m_x, m_y, m_z;
+real PL_x, PL_y, PL_z;
+// h vectors
+real heff_x, heff_y, heff_z;
+// STT dlt/flt
+real Ip;
+real hsttdlt_x, hsttdlt_y, hsttdlt_z;
+real hsttflt_x, hsttflt_y, hsttflt_z;
+
+// RK4
+real mmx, mmy, mmz;
+real k1x, k1y, k1z, k2x, k2y, k2z, k3x, k3y, k3z, k4x, k4y, k4z;
+real dmdt_x, dmdt_y, dmdt_z;
+real norm, fn;
+
+// Fields -----------------------------------------------------------
+analog function real Field;
+    input Hk, Ms2, PolFL, facFLT_STT, m_x, m_y, m_z, hext_x, hext_y, hext_z, demag_nx, demag_ny, demag_nz, I, Ip, dt, PL_x, PL_y, PL_z;
+    output heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z;
+    real m_x, m_y, m_z, hext_x, hext_y, hext_z, demag_nx, demag_ny, demag_nz, I, Ip, thermal_noise, dt, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z, PL_x, PL_y, PL_z, Hk, Ms2, hd_x, hd_y, hd_z, huni_z, dot_result, beta, epsilon, facFLT_STT, PolFL;
+
+    begin
+        // demagnetization
+        hd_x = -4*1e-7*Ms2*demag_nx*m_x*`M_PI;        // [T]
+        hd_y = -4*1e-7*Ms2*demag_ny*m_y*`M_PI;
+        hd_z = -4*1e-7*Ms2*demag_nz*m_z*`M_PI;
+
+        // uniaxial anisotropy
+        huni_z = Hk*m_z;
+
+        heff_x = hext_x + hd_x;
+        heff_y = hext_y + hd_y;
+        heff_z = hext_z + hd_z + huni_z;
+
+        // STT component
+        dot_result = m_x*PL_x + m_y*PL_y + m_z*PL_z;
+        epsilon = PolFL/(1+PolFL*PolFL*dot_result);
+        beta = I*Ip;
+        hsttdlt_x = beta*epsilon;
+        hsttdlt_y = beta*epsilon;
+        hsttdlt_z = beta*epsilon;
+        hsttflt_x = hsttdlt_x*facFLT_STT;
+        hsttflt_y = hsttdlt_y*facFLT_STT;
+        hsttflt_z = hsttdlt_z*facFLT_STT;
+
+        Field = 0;
+    end
+endfunction
+
+// LLGeq -------------------------------------------------------------------------
+analog function real LLGeq;
+    input alpha, mmx, mmy, mmz, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z, P_x, P_y, P_z;
+    output dmdt_x, dmdt_y, dmdt_z;
+    real alpha, mmx, mmy, mmz, cmmx, cmmy, cmmz, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z, P_x, P_y, P_z, dmdt_x, dmdt_y, dmdt_z;
+
+    begin
+        cmmx = mmy*heff_z-heff_y*mmz;
+        cmmy = -mmx*heff_z+mmz*heff_x;
+        cmmz = mmx*heff_y-mmy*heff_x;
+        dmdt_x = -cmmx-alpha*(mmy*cmmz-cmmy*mmz);
+        dmdt_y = -cmmy-alpha*(-mmx*cmmz+mmz*cmmx);
+        dmdt_z = -cmmz-alpha*(mmx*cmmy-mmy*cmmx);
+
+        cmmx = mmy*P_z-P_y*mmz;
+        cmmy = -mmx*P_z+mmz*P_x;
+        cmmz = mmx*P_y-mmy*P_x;
+        dmdt_x = dmdt_x-hsttdlt_x*(mmy*cmmz-cmmy*mmz)+alpha*hsttdlt_x*cmmx+hsttflt_x*cmmx+alpha*hsttflt_x*(mmy*cmmz-cmmy*mmz);
+        dmdt_y = dmdt_y-hsttdlt_y*(-mmx*cmmz+mmz*cmmx)+alpha*hsttdlt_y*cmmy+hsttflt_y*cmmy+alpha*hsttflt_y*(-mmx*cmmz+mmz*cmmx);
+        dmdt_z = dmdt_z-hsttdlt_z*(mmx*cmmy-mmy*cmmx)+alpha*hsttdlt_z*cmmz+hsttflt_z*cmmz+alpha*hsttflt_z*(mmx*cmmy-mmy*cmmx);
+
+        LLGeq = 0;
+    end
+endfunction
+
+
+// ------------------------------------------------------------------------------
+// LLG behavior
+analog begin
+    // initialization -----------------------------------------------------------
+    @(initial_step) begin
+
+        // inits basic parameters
+        Hk2 = Hk;
+        Ms2 = Ms;
+        r_gamma = gamma / (1+alpha*alpha);
+        phi_init2 = phi_init;
+
+		if (init_state == 2) begin
+			theta_init2 = theta_init;
+		end
+		else begin
+			if (init_state == 0) begin
+				theta_init2 = 0;
+			end
+			else if (init_state == 1) begin
+				theta_init2 = `M_PI;
+			end
+		end
+
+        // thermal stability
+        delta = ((Hk2*Ms2-mu_0*Ms2*Ms2/2)*volume) / (kb*T);
+        theta0 = sqrt(1/(2*delta));
+        
+        // inits magnetic angle
+        m_phi = phi_init2;
+
+        if (init_state != 2) begin
+            if (theta_init2 < `M_PI/2) begin
+                m_theta = 2*theta0*sqrt(2/(`M_PI));
+            end
+            else begin
+                m_theta = `M_PI - 2*theta0*sqrt(2/(`M_PI));
+            end
+        end
+        else begin
+            m_theta = theta_init2;
+        end
+        
+        // transform to cart
+        m_x = sin(m_theta)*cos(m_phi);
+		m_y = sin(m_theta)*sin(m_phi);
+		m_z = cos(m_theta);
+        PL_x = sin(theta_PL)*cos(phi_PL);
+		PL_y = sin(theta_PL)*sin(phi_PL);
+		PL_z = cos(theta_PL);
+
+		// initial R_mtj
+        R_mtj = RP+(RAP-RP)*((1-m_z)/2);
+
+        // inits STT
+        Ip = hbar / (2*Ms2*volume);
+
+        // time
+        p_time = -tstep;
+
+    end
+
+    // Resistance 
+    if (abs(V(fl,pl))>5e-3) begin
+		R_mtj = RP+(RAP-RP)*((1-m_z)/2);
+		LLG_flag = 1;
+    end
+    else begin
+		if (abs(m_z)<0.99) begin
+			R_mtj = RP+(RAP-RP)*((1-m_z)/2);
+			LLG_flag = 1;
+		end
+		else begin
+			R_mtj = R_mtj;
+			LLG_flag = 0;
+		end
+    end
+	//Iin = I(fl, pl);
+	//V(fl, pl) <+ I(fl, pl)*R_mtj;
+	//V(V_MTJ) <+ V(fl, pl);
+    //R_mtj = RP+(RAP-RP)*((1-m_z)/2)/(1+V(fl, pl)*V(fl, pl)/Vhalf*Vhalf);
+    Iin = V(fl, pl)/R_mtj;
+    I(fl, pl) <+ V(fl, pl)/R_mtj;
+    // outputs
+    V(V_MTJ) <+ V(fl, pl);
+    V(I_MTJ) <+ I(fl, pl);
+	V(R_out) <+ R_mtj;
+
+    // time
+    $bound_step(tstep);
+    c_time = $abstime;	// Get current timestep
+    dt = c_time-p_time;
+
+	if (LLG_flag) begin
+    // solving LLG equation -------------------------------------------
+    // RK4
+    // step 1
+    mmx = m_x;
+    mmy = m_y;
+    mmz = m_z;
+    fn = Field(Hk, Ms2, PolFL, facFLT_STT, mmx, mmy, mmz, hext_x, hext_y, hext_z, demag_nx, demag_ny, demag_nz, Iin, Ip, dt, PL_x, PL_y, PL_z, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z);
+    fn = LLGeq(alpha, mmx, mmy, mmz, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z, P_x, P_y, P_z, dmdt_x, dmdt_y, dmdt_z);
+    k1x = r_gamma*dmdt_x;
+    k1y = r_gamma*dmdt_y;
+    k1z = r_gamma*dmdt_z;
+
+    // step 2
+    mmx = m_x+k1x*dt/2;
+    mmy = m_y+k1y*dt/2;
+    mmz = m_z+k1z*dt/2;
+    fn = Field(Hk, Ms2, PolFL, facFLT_STT, mmx, mmy, mmz, hext_x, hext_y, hext_z, demag_nx, demag_ny, demag_nz, Iin, Ip, dt, PL_x, PL_y, PL_z, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z);
+    fn = LLGeq(alpha, mmx, mmy, mmz, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z, P_x, P_y, P_z, dmdt_x, dmdt_y, dmdt_z);
+    k2x = r_gamma*dmdt_x;
+    k2y = r_gamma*dmdt_y;
+    k2z = r_gamma*dmdt_z;
+
+    // step 3
+    mmx = m_x+k2x*dt/2;
+    mmy = m_y+k2y*dt/2;
+    mmz = m_z+k2z*dt/2;
+    fn = Field(Hk, Ms2, PolFL, facFLT_STT, mmx, mmy, mmz, hext_x, hext_y, hext_z, demag_nx, demag_ny, demag_nz, Iin, Ip, dt, PL_x, PL_y, PL_z, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z);
+    fn = LLGeq(alpha, mmx, mmy, mmz, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z, P_x, P_y, P_z, dmdt_x, dmdt_y, dmdt_z);
+    k3x = r_gamma*dmdt_x;
+    k3y = r_gamma*dmdt_y;
+    k3z = r_gamma*dmdt_z;
+
+    // step 4
+    mmx = m_x+k3x*dt;
+    mmy = m_y+k3y*dt;
+    mmz = m_z+k3z*dt;
+    fn = Field(Hk, Ms2, PolFL, facFLT_STT, mmx, mmy, mmz, hext_x, hext_y, hext_z, demag_nx, demag_ny, demag_nz, Iin, Ip, dt, PL_x, PL_y, PL_z, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z);
+    fn = LLGeq(alpha, mmx, mmy, mmz, heff_x, heff_y, heff_z, hsttdlt_x, hsttdlt_y, hsttdlt_z, hsttflt_x, hsttflt_y, hsttflt_z, P_x, P_y, P_z, dmdt_x, dmdt_y, dmdt_z);
+    k4x = r_gamma*dmdt_x;
+    k4y = r_gamma*dmdt_y;
+    k4z = r_gamma*dmdt_z;
+
+    // final step
+    m_x = m_x+dt/6*(k1x+2*k2x+2*k3x+k4x);
+    m_y = m_y+dt/6*(k1y+2*k2y+2*k3y+k4y);
+    m_z = m_z+dt/6*(k1z+2*k2z+2*k3z+k4z);
+
+    norm = sqrt(m_x*m_x+m_y*m_y+m_z*m_z);
+    m_x = m_x/norm;
+    m_y = m_y/norm;
+    m_z = m_z/norm;
+	end
+	else begin
+	m_x = m_x;
+	m_y = m_y;
+	m_z = m_z;
+	end
+
+    V(mz) <+ m_z;                              // output m_z
+    
+    p_time = $abstime;
+end
+
+endmodule

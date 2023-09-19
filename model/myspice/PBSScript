@@ -1,0 +1,10 @@
+#! /bin/bash
+#PBS -N spice_test
+#PBS -q cpu
+#PBS -l select=1:ppn=1
+
+cd $PBS_O_WORKDIR
+
+run="! hspice 1T1M.sp>.lis"  # type what you mainly want to run here
+
+eval $run 1> >(tee ${PBS_JOBID}.${PBS_JOBNAME}.out) 2> >(tee -a ${PBS_JOBID}.${PBS_JOBNAME}.out)

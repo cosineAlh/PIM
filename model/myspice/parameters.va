@@ -1,0 +1,64 @@
+// Basic Parameters for MTJ
+// 
+//-----------------------------------------------------------------------------------
+// This file is the parameters and configurations you need to set.
+// # Instruction
+// 1. Set the MTJ dimensions and material parameters.
+// 2. Select initial state of free layer(P/AP or user defined initial angle).
+// 3. Select the thermal. 
+//-----------------------------------------------------------------------------------
+
+`include "disciplines.vams"
+`include "constants.vams"
+
+parameter real tstep=1e-12;                 // [s] max time step
+
+// dimmensions
+parameter real tFL=1e-9;                   // [m] thickness of free layer
+parameter real tox=1.2e-9;                   // [m] thickness of oxide
+parameter real WFL=50e-9;                    // [m] mtj width
+parameter real LFL=50e-9;                    // [m] mtj length
+
+parameter real area = WFL*LFL;       // [m^2]
+parameter real volume = area*tFL;            // [m^3]
+
+// thermal
+parameter integer thermal_enable = 1;           // thermal enable
+parameter real T = 300;                         // temperature [K]
+
+// PL angle
+parameter real theta_PL=0.0;                   // [rad] pinned layer theta
+parameter real phi_PL=0.0;                     // [rad] pinned layer phi
+
+// initial angle
+parameter integer init_state = 2;               // 0: P, 1: AP, 2: theta_init
+parameter real theta_init=`M_PI*175/180;        // [rad] 
+parameter real phi_init=0.0;                    // [rad]
+
+// magnetic parameters
+parameter real Hk=0.45;                      // uniaxial anisotropy [T]
+parameter real alpha=0.01;                      // alpha damping factor
+parameter real Ms=0.8e6;                        // magnetization sat. [A/m]
+
+// Hext (external field)
+parameter real hext_x=0;
+parameter real hext_y=0;
+parameter real hext_z=0;
+
+// demagnization
+parameter real demag_nx=0.029568912401017035;
+parameter real demag_ny=0.029568912401017035;
+parameter real demag_nz=0.9408621604251352;      // online calculator
+
+// STT
+parameter real facFLT_STT=0;                  // ratio of FLT over DLT
+parameter real PolFL=0.4;                       // polarization factor of FL layer
+parameter real P_x=0;
+parameter real P_y=0;
+parameter real P_z=1;
+
+// TMR and Resistance
+parameter real RP=2.0e3;                        // RP resistance, [ohm]
+parameter real TMR = 1.5;                       // 2*Pol*Pol/(1-Pol*Pol);
+parameter real RAP = RP*(1+TMR);
+parameter real Vhalf = 0.5;

@@ -1,0 +1,17 @@
+// Constants
+//-----------------------------------------------------------------------------------
+
+`include "disciplines.vams"
+`include "constants.vams"
+
+parameter real gamma = 1.760859644e11;        // [rad/s/T]
+// elementary charge, [C]
+parameter real ele = `P_Q;	                // 1.602176462e-19 [C]
+// reduced plank's constant [J s]
+parameter real hbar = 6.58211951440e-16;      // [eV.s]
+// vacuum permeability, 4pi/1e7 [H/m]
+parameter real mu_0 = 4*`M_PI/1e7;           // 1.25663706212e-6 [T.m/A]
+// Boltzman constant [J/K]
+parameter real kb = 1.38064852e-23;
+// Borh magneton [J/T]
+parameter real mub = gamma * hbar / 2;
